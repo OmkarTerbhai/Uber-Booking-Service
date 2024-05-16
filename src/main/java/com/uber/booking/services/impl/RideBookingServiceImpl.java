@@ -1,5 +1,6 @@
 package com.uber.booking.services.impl;
 
+import com.uber.booking.apispec.LocationServiceAPISpec;
 import com.uber.booking.dto.CreateBookingDTO;
 import com.uber.booking.dto.NearbyDriversDto;
 import com.uber.booking.dto.SaveDriverLocationDto;
@@ -17,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -36,36 +40,24 @@ public class RideBookingServiceImpl implements BookingService {
     @Autowired
     private BookingRepository bookingRepository;
 
+    @Autowired
+    private LocationServiceAPISpec locationServiceAPISpec;
+
     private RestTemplate restTemplate;
+
+    private List<SaveDriverLocationDto> driverLocations;
 
     public RideBookingServiceImpl() {
         this.restTemplate = new RestTemplate();
     }
     @Override
     public Booking createBooking(CreateBookingDTO dto) {
-        Rider r = Rider.builder()
-                .phoneNumber("9898989898")
-                .name("John")
-                .email("john@outlook.com")
-                .password("John123")
-                .build();
-
-        Driver d = Driver.builder()
-                .phoneNumber("9898989898")
-                .name("John")
-                .licenseNumber("MH12ER6650")
-                .aadharCard("557686787983")
-                .build();
-
-        this.passengerRepository.save(r);
 
         Optional<Rider> rider = this.passengerRepository.findById(dto.getRiderId());
 
-
         //Find Nearby driver with location :)
-        List<SaveDriverLocationDto> driverList = getNearByDrivers(dto.getStartLocation());
+        getNearByDrivers(dto.getStartLocation());
 
-        Optional<Driver> driver = this.driverRepository.findById(driverList.get(0).getDriverId());
         Booking booking = Booking
                 .builder()
                 .rider(rider.get())
@@ -73,7 +65,6 @@ public class RideBookingServiceImpl implements BookingService {
                 .endLocation(dto.getEndLocation())
                 .startTime(new Date(System.currentTimeMillis()))
                 .endTime(new Date(System.currentTimeMillis() + 300000L))
-                .driver(driver.get())
                 .build();
 
         this.bookingRepository.save(booking);
@@ -82,21 +73,31 @@ public class RideBookingServiceImpl implements BookingService {
         return booking;
     }
 
-    private List<SaveDriverLocationDto> getNearByDrivers(ExactLocation startLocation) {
+    private void getNearByDrivers(ExactLocation startLocation) {
+
         NearbyDriversDto  nearbyDriversDto = NearbyDriversDto
                 .builder()
                 .longitude(startLocation.getLongitude())
                 .latitude(startLocation.getLatitude())
                 .build();
 
-        ResponseEntity<SaveDriverLocationDto[]> res = this.restTemplate.postForEntity(BookingConstants.NEARBY_DRIVER_API_URL, nearbyDriversDto, SaveDriverLocationDto[].class);
 
-        List<SaveDriverLocationDto> driverLocations = Arrays.asList(res.getBody());
-            driverLocations.forEach(driverLocationDto -> {
-                System.out.println(driverLocationDto.getDriverId() + " " + "lat: " + driverLocationDto.getLatitude() + "long: " + driverLocationDto.getLongitude());
-            });
+        Call<SaveDriverLocationDto[]> call = this.locationServiceAPISpec.getNearByDrivers(nearbyDriversDto);
+
+        call.enqueue(new Callback<SaveDriverLocationDto[]>() {
+            @Override
+            public void onResponse(Call<SaveDriverLocationDto[]> call, Response<SaveDriverLocationDto[]> response) {
+                driverLocations = Arrays.asList(response.body());
+
+            }
+
+            @Override
+            public void onFailure(Call<SaveDriverLocationDto[]> call, Throwable t) {
+                throw new RuntimeException();
+            }
+        });
 
 
-        return driverLocations;
+
     }
 }

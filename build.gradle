@@ -18,6 +18,8 @@ configurations {
 }
 
 repositories {
+	jcenter()
+	google()
 	mavenLocal()
 	mavenCentral()
 	maven { url 'https://repo.spring.io/milestone' }
@@ -35,6 +37,9 @@ dependencies {
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+	implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-netflix-eureka-client', version: '4.1.1'
 }
 
 tasks.named('test') {
