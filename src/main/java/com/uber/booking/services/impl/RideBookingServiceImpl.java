@@ -1,5 +1,6 @@
 package com.uber.booking.services.impl;
 
+import com.uber.booking.apispec.DriverFinderServiceSpec;
 import com.uber.booking.apispec.LocationServiceAPISpec;
 import com.uber.booking.dto.CreateBookingDTO;
 import com.uber.booking.dto.NearbyDriversDto;
@@ -10,11 +11,10 @@ import com.uber.booking.repositories.DriverRepository;
 import com.uber.booking.repositories.PassengerRepository;
 import com.uber.booking.services.BookingService;
 import com.uber.booking.utils.BookingConstants;
+
 import com.uber.common.entities.Booking;
-import com.uber.common.entities.Driver;
 import com.uber.common.entities.ExactLocation;
 import com.uber.common.entities.Rider;
-import com.uber.common.utils.BookingStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -43,6 +43,9 @@ public class RideBookingServiceImpl implements BookingService {
 
     @Autowired
     private LocationServiceAPISpec locationServiceAPISpec;
+
+    @Autowired
+    private DriverFinderServiceSpec driverFinderServiceSpec;
 
     private RestTemplate restTemplate;
 
@@ -102,7 +105,24 @@ public class RideBookingServiceImpl implements BookingService {
 
     }
 
+    /**
+     * Method to request nearby drivers.
+     *
+     * @param dto
+     */
     private void requestRide(RequestDriverDTO dto) {
+        Call<Boolean> call = this.driverFinderServiceSpec.requestDriver(dto);
 
+        call.enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                System.out.println(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<Boolean> call, Throwable throwable) {
+
+            }
+        });
     }
 }

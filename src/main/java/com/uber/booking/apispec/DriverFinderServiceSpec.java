@@ -7,6 +7,6 @@ import retrofit2.http.POST;
 
 public interface DriverFinderServiceSpec {
 
-    @POST("/api/v1/driver")
+    @POST("/api/v1/driver/request")
     Call<Boolean> requestDriver(@Body RequestDriverDTO dto);
 }

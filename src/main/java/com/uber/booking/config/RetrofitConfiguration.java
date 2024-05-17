@@ -1,6 +1,7 @@
 package com.uber.booking.config;
 
 import com.netflix.discovery.EurekaClient;
+import com.uber.booking.apispec.DriverFinderServiceSpec;
 import com.uber.booking.apispec.LocationServiceAPISpec;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,16 @@ public class RetrofitConfiguration {
                 .client(new OkHttpClient.Builder().build())
                 .build()
                 .create(LocationServiceAPISpec.class);
+    }
+
+    @Bean
+    public DriverFinderServiceSpec driverFinderServiceSpec() {
+        return new Retrofit.Builder()
+                .baseUrl(getServiceUrl("Driverfinder"))
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(new OkHttpClient.Builder().build())
+                .build()
+                .create(DriverFinderServiceSpec.class);
     }
 
 }
