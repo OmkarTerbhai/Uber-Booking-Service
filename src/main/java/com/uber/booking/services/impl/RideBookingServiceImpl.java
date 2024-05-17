@@ -3,6 +3,7 @@ package com.uber.booking.services.impl;
 import com.uber.booking.apispec.LocationServiceAPISpec;
 import com.uber.booking.dto.CreateBookingDTO;
 import com.uber.booking.dto.NearbyDriversDto;
+import com.uber.booking.dto.RequestDriverDTO;
 import com.uber.booking.dto.SaveDriverLocationDto;
 import com.uber.booking.repositories.BookingRepository;
 import com.uber.booking.repositories.DriverRepository;
@@ -88,7 +89,7 @@ public class RideBookingServiceImpl implements BookingService {
             @Override
             public void onResponse(Call<SaveDriverLocationDto[]> call, Response<SaveDriverLocationDto[]> response) {
                 driverLocations = Arrays.asList(response.body());
-
+                RequestDriverDTO dto = RequestDriverDTO.builder().driverIds(driverLocations).build();
             }
 
             @Override
@@ -98,6 +99,10 @@ public class RideBookingServiceImpl implements BookingService {
         });
 
 
+
+    }
+
+    private void requestRide(RequestDriverDTO dto) {
 
     }
 }
