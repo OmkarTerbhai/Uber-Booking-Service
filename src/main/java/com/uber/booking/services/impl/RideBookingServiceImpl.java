@@ -2,17 +2,16 @@ package com.uber.booking.services.impl;
 
 import com.uber.booking.apispec.DriverFinderServiceSpec;
 import com.uber.booking.apispec.LocationServiceAPISpec;
-import com.uber.booking.dto.CreateBookingDTO;
-import com.uber.booking.dto.NearbyDriversDto;
-import com.uber.booking.dto.RequestDriverDTO;
-import com.uber.booking.dto.SaveDriverLocationDto;
+import com.uber.booking.dto.*;
 import com.uber.booking.repositories.BookingRepository;
 import com.uber.booking.repositories.DriverRepository;
 import com.uber.booking.repositories.PassengerRepository;
 import com.uber.booking.services.BookingService;
 import com.uber.booking.utils.BookingConstants;
 
+
 import com.uber.common.entities.Booking;
+import com.uber.common.entities.Driver;
 import com.uber.common.entities.ExactLocation;
 import com.uber.common.entities.Rider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,29 +76,49 @@ public class RideBookingServiceImpl implements BookingService {
         return booking;
     }
 
-    private void getNearByDrivers(ExactLocation startLocation) {
+    @Override
+    public Booking updateBooking(UpdateBookingDTO dto) {
+        Optional<Booking> b = this.bookingRepository.findById(dto.getBookingId());
+        Optional<Driver> d = this.driverRepository.findById(dto.getDriverId());
 
+        Booking booking = b.get();
+        booking.setDriver(d.get());
+
+        this.bookingRepository.save(booking);
+
+        return booking;
+    }
+
+    private void getNearByDrivers(ExactLocation startLocation) {
+        System.out.println("In getNearByDrivers");
         NearbyDriversDto  nearbyDriversDto = NearbyDriversDto
                 .builder()
                 .longitude(startLocation.getLongitude())
                 .latitude(startLocation.getLatitude())
                 .build();
 
+        try {
+            Call<SaveDriverLocationDto[]> call = this.locationServiceAPISpec.getNearByDrivers(nearbyDriversDto);
 
-        Call<SaveDriverLocationDto[]> call = this.locationServiceAPISpec.getNearByDrivers(nearbyDriversDto);
+            call.enqueue(new Callback<SaveDriverLocationDto[]>() {
+                @Override
+                public void onResponse(Call<SaveDriverLocationDto[]> call, Response<SaveDriverLocationDto[]> response) {
+                    System.out.println("In getNearByDrivers: response handler");
+                    driverLocations = Arrays.asList(response.body());
+                    System.out.println("Array of drivers: " + driverLocations.get(0).getDriverId());
+                    RequestDriverDTO dto = RequestDriverDTO.builder().driverIds(driverLocations).build();
+                    requestRide(dto);
+                }
 
-        call.enqueue(new Callback<SaveDriverLocationDto[]>() {
-            @Override
-            public void onResponse(Call<SaveDriverLocationDto[]> call, Response<SaveDriverLocationDto[]> response) {
-                driverLocations = Arrays.asList(response.body());
-                RequestDriverDTO dto = RequestDriverDTO.builder().driverIds(driverLocations).build();
-            }
-
-            @Override
-            public void onFailure(Call<SaveDriverLocationDto[]> call, Throwable t) {
-                throw new RuntimeException();
-            }
-        });
+                @Override
+                public void onFailure(Call<SaveDriverLocationDto[]> call, Throwable t) {
+                    throw new RuntimeException();
+                }
+            });
+        }
+        catch (Exception e) {
+            System.out.println(e);
+        }
 
 
 
@@ -116,7 +135,7 @@ public class RideBookingServiceImpl implements BookingService {
         call.enqueue(new Callback<Boolean>() {
             @Override
             public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                System.out.println(response.body());
+                System.out.println("Inside ride requested response handler" + response.body());
             }
 
             @Override
