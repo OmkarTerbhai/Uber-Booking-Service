@@ -33,7 +33,7 @@ public class RetrofitConfiguration {
     @Bean
     public DriverFinderServiceSpec driverFinderServiceSpec() {
         return new Retrofit.Builder()
-                .baseUrl(getServiceUrl("Driverfinder"))
+                .baseUrl(getServiceUrl("DRIVERFINDER"))
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(new OkHttpClient.Builder().build())
                 .build()
