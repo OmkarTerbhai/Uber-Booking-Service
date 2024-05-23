@@ -14,6 +14,7 @@ import com.uber.common.entities.Booking;
 import com.uber.common.entities.Driver;
 import com.uber.common.entities.ExactLocation;
 import com.uber.common.entities.Rider;
+import com.uber.common.utils.BookingStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -58,8 +59,7 @@ public class RideBookingServiceImpl implements BookingService {
 
         Optional<Rider> rider = this.passengerRepository.findById(dto.getRiderId());
 
-        //Find Nearby driver with location :)
-        getNearByDrivers(dto.getStartLocation());
+
 
         Booking booking = Booking
                 .builder()
@@ -72,6 +72,8 @@ public class RideBookingServiceImpl implements BookingService {
 
         this.bookingRepository.save(booking);
 
+        //Find Nearby driver with location :)
+        getNearByDrivers(dto.getStartLocation(), String.valueOf(booking.getId()));
 
         return booking;
     }
@@ -83,13 +85,14 @@ public class RideBookingServiceImpl implements BookingService {
 
         Booking booking = b.get();
         booking.setDriver(d.get());
-
+        booking.setBookingStatus(BookingStatus.IN_RIDE);
+        booking.setUpdatedAt(new Date(System.currentTimeMillis()));
         this.bookingRepository.save(booking);
 
         return booking;
     }
 
-    private void getNearByDrivers(ExactLocation startLocation) {
+    private void getNearByDrivers(ExactLocation startLocation, String bookingId) {
         System.out.println("In getNearByDrivers");
         NearbyDriversDto  nearbyDriversDto = NearbyDriversDto
                 .builder()
@@ -106,7 +109,8 @@ public class RideBookingServiceImpl implements BookingService {
                     System.out.println("In getNearByDrivers: response handler");
                     driverLocations = Arrays.asList(response.body());
                     System.out.println("Array of drivers: " + driverLocations.get(0).getDriverId());
-                    RequestDriverDTO dto = RequestDriverDTO.builder().driverIds(driverLocations).build();
+                    RequestDriverDTO dto = RequestDriverDTO.builder()
+                                    .bookingId(bookingId).driverIds(driverLocations).build();
                     requestRide(dto);
                 }
 

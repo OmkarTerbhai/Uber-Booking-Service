@@ -10,5 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RequestDriverDTO {
+    private String bookingId;
+
     private List<SaveDriverLocationDto> driverIds;
 }
