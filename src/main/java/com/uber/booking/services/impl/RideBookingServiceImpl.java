@@ -23,6 +23,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import java.awt.print.Book;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,6 +84,9 @@ public class RideBookingServiceImpl implements BookingService {
         Optional<Booking> b = this.bookingRepository.findById(dto.getBookingId());
         Optional<Driver> d = this.driverRepository.findById(dto.getDriverId());
 
+        Driver driver = d.get();
+        driver.setAvailable(false);
+        
         Booking booking = b.get();
         booking.setDriver(d.get());
         booking.setBookingStatus(BookingStatus.IN_RIDE);
@@ -90,6 +94,27 @@ public class RideBookingServiceImpl implements BookingService {
         this.bookingRepository.save(booking);
 
         return booking;
+    }
+
+    @Override
+    public Boolean endBooking(EndBookingDTO dto) {
+        Optional<Booking> b = this.bookingRepository.findById(dto.getBookingId());
+        Booking booking = b.get();
+
+        Optional<Driver> d = this.driverRepository.findById(dto.getDriverId());
+        Driver driver = d.get();
+
+        if(dto.getLocation().getLatitude() == booking.getEndLocation().getLatitude() &&
+        dto.getLocation().getLongitude() == booking.getEndLocation().getLongitude()) {
+            //Valid End of booking
+            booking.setBookingStatus(BookingStatus.COMPLETED);
+            driver.setAvailable(true);
+        }
+
+        this.bookingRepository.save(booking);
+        this.driverRepository.save(driver);
+
+        return true;
     }
 
     private void getNearByDrivers(ExactLocation startLocation, String bookingId) {

@@ -1,6 +1,7 @@
 package com.uber.booking.controllers;
 
 import com.uber.booking.dto.CreateBookingDTO;
+import com.uber.booking.dto.EndBookingDTO;
 import com.uber.booking.dto.UpdateBookingDTO;
 import com.uber.booking.services.BookingService;
 import com.uber.common.entities.Booking;
@@ -30,5 +31,12 @@ public class BookingController {
         Booking b = this.bookingService.updateBooking(dto);
 
         return new ResponseEntity<>(b, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/end")
+    public ResponseEntity<Boolean> endBooking(@RequestBody EndBookingDTO dto) {
+        boolean res = this.bookingService.endBooking(dto);
+
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }
