@@ -117,6 +117,17 @@ public class RideBookingServiceImpl implements BookingService {
         return true;
     }
 
+    @Override
+    public List<List<Booking>> findBookings(String driverIds) {
+        List<String> driverIdList = Arrays.asList(driverIds.split(","));
+        List<Driver> drivers = this.driverRepository.findByIdIn(driverIdList);
+
+        List<Booking> bookingList = this.bookingRepository.findByDriverIn(drivers);
+
+        System.out.println(drivers.size());
+        return null;
+    }
+
     private void getNearByDrivers(ExactLocation startLocation, String bookingId) {
         System.out.println("In getNearByDrivers");
         NearbyDriversDto  nearbyDriversDto = NearbyDriversDto
